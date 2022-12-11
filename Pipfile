@@ -9,8 +9,12 @@ psycopg2 = "*"
 djangorestframework = "*"
 djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
+opencv-python = "*"
+scikit-image = "*"
+pillow = "*"
 
 [dev-packages]
+autopep8 = "*"
 
 [requires]
 python_version = "3.10"
