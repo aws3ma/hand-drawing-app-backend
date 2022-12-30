@@ -10,8 +10,8 @@ djangorestframework = "*"
 djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
 opencv-python = "*"
-scikit-image = "*"
 pillow = "*"
+whitenoise = "*"
 
 [dev-packages]
 autopep8 = "*"

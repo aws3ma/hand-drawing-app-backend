@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     "rest_framework",
     'rest_framework_simplejwt',
     "corsheaders",
-    "authentification"
+    "authentification",
+    "traitimage"
 ]
 
 MIDDLEWARE = [
@@ -88,11 +89,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
 
-        'NAME': 'handdrawing',
+        'NAME': 'sketchapp',
 
-        'USER': 'handdrawing',
+        'USER': 'sketchapp',
 
-        'PASSWORD': 'handdrawing',
+        'PASSWORD': 'sketchapp',
 
         'HOST': 'localhost',
 

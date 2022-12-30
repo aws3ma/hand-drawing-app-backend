@@ -15,10 +15,10 @@ def sketch_directory_path(instance, filename):
 class OriginalImage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(upload_to=original_directory_path)
-    width = models.PositiveIntegerField(max_length=5)
-    height = models.PositiveIntegerField(max_length=5)
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
     weight = models.DecimalField(max_digits=8, decimal_places=2)
-    channels_number = models.PositiveBigIntegerField(max_length=1)
+    channels_number = models.PositiveBigIntegerField()
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
@@ -30,7 +30,7 @@ class SketchImage(models.Model):
     original_image = models.ForeignKey(OriginalImage, on_delete=models.CASCADE)
     image = models.ImageField(upload_to=sketch_directory_path)
     weight = models.DecimalField(max_digits=8, decimal_places=2)
-    channels_number = models.PositiveBigIntegerField(max_length=1)
+    channels_number = models.PositiveBigIntegerField()
 
     def __str__(self) -> str:
         return self.name
