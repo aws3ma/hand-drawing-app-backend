@@ -5,9 +5,9 @@ from .serializer import OriginalImageSerializer, SketchImageSerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.core.files.storage import FileSystemStorage
 import cv2
 import os
+from django.core.files.base import ContentFile
 
 
 class ImageView(APIView):
@@ -18,15 +18,31 @@ class ImageView(APIView):
         data = request.data.copy()
         data["user"] = request.user.id
         # image description : get specs of image and return tuple (width,height,channels_number,weight)
-        # affect the results into the data dict
         serializer = OriginalImageSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+
+        specs = self.get_image_specs("."+serializer.data["image"])
+        serializer2 = OriginalImageSerializer(
+            instance=OriginalImage.objects.get(id=serializer.data["id"]), 
+            data=specs, 
+            partial=True)
+        if (serializer2.is_valid(raise_exception=True)):
+            serializer2.save()
+
         # image to sketch : get sketch image,channels_number and weight
-        # affect results to data dict
-        serializer = OriginalImageSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
+        sketch = self.img_to_sketch("."+serializer.data["image"])
+        serializer = SketchImageSerializer(data={"image":sketch,"user":request.user.id,"original_image":id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        specs = self.get_image_specs("."+serializer.data["image"])
+        serializer2 = SketchImageSerializer(
+            instance=SketchImage.objects.get(id=serializer.data["id"]), 
+            data=specs, 
+            partial=True)
+        if (serializer2.is_valid(raise_exception=True)):
+            serializer2.save()
         return Response(status=status.HTTP_201_CREATED)
 
     def get(self, request):
@@ -68,13 +84,13 @@ class ImageView(APIView):
 
         return Response(data=images, status=status.HTTP_200_OK)
 
-    def get_image_specs(image_path):
+    def get_image_specs(self, image_path):
         image = cv2.imread(image_path)
         height, width, channels_number = image.shape
-        image_weight = os.stat("img.png").st_size/1024
-        return (height, width, channels_number, image_weight)
+        image_weight = os.stat(image_path).st_size/1024
+        return {"height": height, "width": width, "channels_number": channels_number, "weight": round(image_weight, 2)}
 
-    def img_to_sketch(image_path):
+    def img_to_sketch(self, image_path):
         # loads an image from the specified file
         image = cv2.imread(image_path)
         # convert an image from one color space to another
@@ -84,4 +100,7 @@ class ImageView(APIView):
         blur = cv2.GaussianBlur(invert, (21, 21), 0)
         invertedblur = cv2.bitwise_not(blur)
         sketch = cv2.divide(grey_img, invertedblur, scale=256.0)
-        return sketch
+        ret, buf = cv2.imencode('.jpg', sketch)
+        print(image_path[32:])
+        content = ContentFile(buf.tobytes(),image_path[32:])
+        return content
