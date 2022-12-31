@@ -21,8 +21,8 @@ class OriginalImage(models.Model):
     channels_number = models.PositiveBigIntegerField(null=True)
     creation_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self) -> str:
-        return self.name
+    # def __str__(self) -> str:
+    #     return self.image.name
 
 
 class SketchImage(models.Model):
@@ -32,5 +32,5 @@ class SketchImage(models.Model):
     weight = models.DecimalField(max_digits=8, decimal_places=2,null=True)
     channels_number = models.PositiveBigIntegerField(null=True)
 
-    def __str__(self) -> str:
-        return self.name
+    # def __str__(self) -> str:
+    #     return self.image.name

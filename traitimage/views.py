@@ -21,7 +21,7 @@ class ImageView(APIView):
         serializer = OriginalImageSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-
+        id_original_image = serializer.data["id"]
         specs = self.get_image_specs("."+serializer.data["image"])
         serializer2 = OriginalImageSerializer(
             instance=OriginalImage.objects.get(id=serializer.data["id"]), 
@@ -32,7 +32,7 @@ class ImageView(APIView):
 
         # image to sketch : get sketch image,channels_number and weight
         sketch = self.img_to_sketch("."+serializer.data["image"])
-        serializer = SketchImageSerializer(data={"image":sketch,"user":request.user.id,"original_image":id})
+        serializer = SketchImageSerializer(data={"image":sketch,"user":request.user.id,"original_image":id_original_image})
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
@@ -67,6 +67,7 @@ class ImageView(APIView):
 
             images = OriginalImageSerializer(
                 images, many=True, context={"request": request})
+            print(images.data)
         # return sketch images
         if sketch != None:
             # return all sketch images
@@ -82,7 +83,7 @@ class ImageView(APIView):
                 images, many=True, context={"request": request})
         # return one image
 
-        return Response(data=images, status=status.HTTP_200_OK)
+        return Response(data=images.data, status=status.HTTP_200_OK)
 
     def get_image_specs(self, image_path):
         image = cv2.imread(image_path)
