@@ -60,42 +60,40 @@ class ImageView(APIView):
     def get(self, request):
         user_id = str(request.user.id)
         original = None
-        sketch = None
+        returned_data = {}
         if "original" in request.query_params.keys():
             original = request.query_params["original"]
-        if "sketch" in request.query_params.keys():
-            sketch = request.query_params["sketch"]
 
         # return original images
         if original != None:
-            # return all original images
+            # return all images
             if original == "all":
-                images = OriginalImage.objects.filter(user_id=user_id)
+                original_images = OriginalImage.objects.filter(user_id=user_id)
+                original_images_serializer = OriginalImageSerializer(
+                original_images, many=True, context={"request": request})
+                returned_data["original"]=original_images_serializer.data
+
+                sketch_images = SketchImage.objects.filter(user_id=user_id)
+                sketch_images_serializer = SketchImageSerializer(
+                sketch_images, many=True, context={"request": request})
+                returned_data["sketch"]=sketch_images_serializer.data
             # return one original image
             else:
-                images = OriginalImage.objects.filter(id=original)
-                # create data of the hist (TP2 II:1) {labels:[],data:[]}
-                # create data of the second hist (TP2 II:2) {labels:[],datasets:{ds1:{data:[],color:"red"},ds2:{data:[],color:"green"}}}
+                original_image = OriginalImage.objects.get(id=original)
+                hist = self.prepare_charts("."+original_image.image.url)
+                original_image_serializer = OriginalImageSerializer(
+                original_image, context={"request": request})
+                returned_data["original"]=original_image_serializer.data
+                returned_data["original"]["histogram"]=hist
 
-            images = OriginalImageSerializer(
-                images, many=True, context={"request": request})
-            print(images.data)
-        # return sketch images
-        if sketch != None:
-            # return all sketch images
-            if sketch == "all":
-                images = SketchImage.objects.filter(user_id=user_id)
-            # return one sketch image
-            else:
-                images = SketchImage.objects.filter(id=sketch)
-                # create data of the hist (TP2 II:1) {labels:[],data:[]}
-                # create data of the second hist (TP2 II:2) {labels:[],datasets:{ds1:{data:[],color:"red"},ds2:{data:[],color:"green"}}}
+                sketch_image = SketchImage.objects.get(original_image__id=original)
+                hist = self.prepare_charts("."+sketch_image.image.url)
+                sketch_image_serializer = SketchImageSerializer(
+                sketch_image, context={"request": request})
+                returned_data["sketch"]=sketch_image_serializer.data
+                returned_data["sketch"]["histogram"]=hist
 
-            images = SketchImageSerializer(
-                images, many=True, context={"request": request})
-        # return one image
-
-        return Response(data=images.data, status=status.HTTP_200_OK)
+        return Response(data=returned_data, status=status.HTTP_200_OK)
 
     def get_image_specs(self, image_path):
         image = cv2.imread(image_path)
