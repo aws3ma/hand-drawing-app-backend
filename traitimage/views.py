@@ -106,7 +106,6 @@ class ImageView(APIView):
         invertedblur = cv2.bitwise_not(blur)
         sketch = cv2.divide(grey_img, invertedblur, scale=256.0)
         ret, buf = cv2.imencode('.jpg', sketch)
-        print(image_path[32:])
         content = ContentFile(buf.tobytes(), image_path[32:])
         return content
 
