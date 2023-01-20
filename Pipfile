@@ -12,8 +12,8 @@ django-cors-headers = "*"
 opencv-python = "*"
 pillow = "*"
 whitenoise = "*"
-scikit-image = "*"
 numpy = "*"
+imageio = {extras = ["pyav"], version = "*"}
 
 [dev-packages]
 autopep8 = "*"

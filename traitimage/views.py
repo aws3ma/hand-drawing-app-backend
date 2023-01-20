@@ -8,7 +8,6 @@ from rest_framework.parsers import MultiPartParser, FormParser
 import cv2
 import os
 from django.core.files.base import ContentFile
-from skimage import io
 import numpy as np
 
 class ImageView(APIView):
@@ -16,16 +15,18 @@ class ImageView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
-        data = request.data.copy()
-        returnedData = {}
+        # print(request.data)
+        # data = request.data.copy()
+        data = {}
+        data["image"]=request.data["image"]
         data["user"] = request.user.id
+        returnedData = {}
         serializer = OriginalImageSerializer(data=data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         id_original_image = serializer.data["id"]
         # image description : get specs of image and return tuple (width,height,channels_number,weight)
         specs = self.get_image_specs("."+serializer.data["image"])
-        hist = self.prepare_charts("."+serializer.data["image"])
         serializer2 = OriginalImageSerializer(
             instance=OriginalImage.objects.get(id=serializer.data["id"]),
             data=specs,
@@ -33,8 +34,8 @@ class ImageView(APIView):
             context={"request": request})
         if (serializer2.is_valid(raise_exception=True)):
             serializer2.save()
-        returnedData["original"] = serializer2.data
-        returnedData["original"]["histogram"] = hist
+        returnedData["id"] = id_original_image
+        
 
         # image to sketch : get sketch image,channels_number and weight
         sketch = self.img_to_sketch("."+serializer.data["image"])
@@ -44,7 +45,6 @@ class ImageView(APIView):
         serializer.save()
 
         specs = self.get_image_specs("."+serializer.data["image"])
-        hist = self.prepare_charts("."+serializer.data["image"])
         serializer2 = SketchImageSerializer(
             instance=SketchImage.objects.get(id=serializer.data["id"]),
             data=specs,
@@ -52,8 +52,7 @@ class ImageView(APIView):
             context={"request": request})
         if (serializer2.is_valid(raise_exception=True)):
             serializer2.save()
-        returnedData["sketch"] = serializer2.data
-        returnedData["sketch"]["histogram"] = hist
+                
 
         return Response(data=returnedData, status=status.HTTP_201_CREATED)
 
@@ -72,11 +71,6 @@ class ImageView(APIView):
                 original_images_serializer = OriginalImageSerializer(
                 original_images, many=True, context={"request": request})
                 returned_data["original"]=original_images_serializer.data
-
-                sketch_images = SketchImage.objects.filter(user_id=user_id)
-                sketch_images_serializer = SketchImageSerializer(
-                sketch_images, many=True, context={"request": request})
-                returned_data["sketch"]=sketch_images_serializer.data
             # return one original image
             else:
                 original_image = OriginalImage.objects.get(id=original)
@@ -117,6 +111,6 @@ class ImageView(APIView):
         return content
 
     def prepare_charts(self,image_path):
-        image = io.imread(image_path)
+        image = cv2.imread(image_path)
         hist1,hist2=np.histogram(image,bins=256)
         return {"labels":np.arange(256),"data":hist1}
